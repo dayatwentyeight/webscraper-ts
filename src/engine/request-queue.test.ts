@@ -15,7 +15,7 @@ describe('RequestQueue', () => {
     jest.clearAllMocks();
 
     mockDbService = new DbService('queue') as jest.Mocked<DbService>;
-    queue = new RequestQueue();
+    queue = new RequestQueue('queue');
   });
 
   describe('push()', () => {

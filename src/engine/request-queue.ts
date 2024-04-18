@@ -10,8 +10,8 @@ class RequestQueue {
   private db: DbService;
   private requestTable: string; 
 
-  constructor() {
-    this.db = new DbService('queue');
+  constructor(db: string) {
+    this.db = new DbService(db);
     this.requestTable = 'request'; 
    }
 

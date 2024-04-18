@@ -20,6 +20,7 @@ type UrlParams = {
 
 export interface Rule {
   id: string,
+  engineType: 'api' | 'cheerio' | 'playwright',
   urlPattern: string,
   urlParams: UrlParams,
   pageParams: PageParams,
@@ -81,10 +82,10 @@ export default class Loader {
   public async load(rule: Rule) {
     this.log.info(`Rule: ${JSON.stringify(rule)}`);
 
-    const { id, urlPattern, urlParams, pageParams, linkSelectors, docSelectors } = rule;
+    const { id, engineType, urlPattern, urlParams, pageParams, linkSelectors, docSelectors } = rule;
 
     const resultDb = new DbService('result');
-    const queue = new RequestQueue();
+    const queue = new RequestQueue(`queue-${engineType}`);
     const router = new RequestRouter();
 
     await router.addHandler(

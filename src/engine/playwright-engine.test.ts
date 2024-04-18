@@ -78,7 +78,7 @@ describe('PlaywrightEngine', () => {
     jest.clearAllMocks();
 
     mockBrowserType = chromium as jest.Mocked<BrowserType>; // Use chrominum to test
-    mockRequestQueue = new RequestQueue() as jest.Mocked<RequestQueue>;
+    mockRequestQueue = new RequestQueue('queue') as jest.Mocked<RequestQueue>;
     mockRequestRouter = new RequestRouter() as jest.Mocked<RequestRouter>;
     mockBrowserContext = {
       newPage: jest.fn().mockResolvedValue({
