@@ -43,6 +43,7 @@ jest.mock("../lib/logger", () => {
 jest.mock("./utils", () => {
   const mUtils = {
     retryNavigate: jest.fn(),
+    setConcurrency: jest.fn(),
   }
   return jest.fn(() => mUtils);
 });

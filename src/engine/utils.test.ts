@@ -1,5 +1,6 @@
 import EngineUtils from "./utils";
 import { setTimeout } from "timers/promises";
+import os from "os";
 import Logger from "../lib/logger";
 
 jest.mock("../lib/logger", () => {
@@ -10,6 +11,7 @@ jest.mock("../lib/logger", () => {
 jest.mock("timers/promises", () => ({
   setTimeout: jest.fn().mockResolvedValue(null),
 }));
+
 
 describe('EngineUtils', () => {
   let utils: EngineUtils;
@@ -60,6 +62,33 @@ describe('EngineUtils', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith("Failed to navigate 1 / 3");
       expect(mockLogger.debug).toHaveBeenCalledWith("Failed to navigate 2 / 3");
       expect(action).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('setConcurrency()', () => {
+    it('should reserve 20% of total memory and calculate instances correctly', () => {
+      jest.spyOn(os, 'totalmem').mockReturnValue(10 * 1024 * 1024 * 1024); // 10GB
+      jest.spyOn(os, 'freemem').mockReturnValue(2 * 1024 * 1024 * 1024); // 2GB
+
+      // totalmem = 10 GB, freemem = 2 GB, 20% reserved = 2 GB, usable = 0 GB
+      // 128 MB per instance -> 0 instances
+      expect(utils.setConcurrency(5)).toBe(0);
+    });
+
+    it('returns number of instances based on maxConcurrency if lower than calculated instances', () => {
+      jest.spyOn(os, 'totalmem').mockReturnValue(10 * 1024 * 1024 * 1024); // 10GB
+      jest.spyOn(os, 'freemem').mockReturnValue(8 * 1024 * 1024 * 1024); // 8GB
+      
+      // totalmem = 10 GB, freemem = 8 GB, 20% reserved = 2 GB, usable = 6 GB
+      // 128 MB per instance -> 48 instances
+      expect(utils.setConcurrency(5)).toBe(5);
+    });
+
+    it('returns calculated number of instances if maxConcurrency is 0', () => {
+      jest.spyOn(os, 'totalmem').mockReturnValue(10 * 1024 * 1024 * 1024); // 10GB
+      jest.spyOn(os, 'freemem').mockReturnValue(8 * 1024 * 1024 * 1024); // 8GB
+
+      expect(utils.setConcurrency(0)).toBe(48);
     });
   });
 

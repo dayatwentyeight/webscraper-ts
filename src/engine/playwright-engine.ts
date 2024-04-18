@@ -41,7 +41,7 @@ class PlaywrightEngine {
     launchContext,
     requestQueue,
     requestHandler,
-    maxConcurrency = 1,
+    maxConcurrency = 0,
     maxRetry = 1,
   }: PlaywrightEngineOptions) {
     this.launchContext = launchContext;
@@ -104,7 +104,8 @@ class PlaywrightEngine {
       const linkHandler = await this.requestHandler.getHandler('addRequest');
       await this.handleAction(context, linkHandler);
 
-      let requests = await this.requestQueue.pop(this.maxConcurrency);
+      let concurrency = this.utils.setConcurrency(this.maxConcurrency);
+      let requests = await this.requestQueue.pop(concurrency);
 
       while (requests.length > 0) {
         const actions = [];
@@ -118,10 +119,13 @@ class PlaywrightEngine {
         }
 
         // Run actions concurrently 
+        this.log.info(`Process ${actions.length} requests`);
         await Promise.all(actions);
 
+        concurrency = this.utils.setConcurrency(this.maxConcurrency);
+
         // Pop request items for next batch
-        requests = await this.requestQueue.pop(this.maxConcurrency);
+        requests = await this.requestQueue.pop(concurrency);
       }
     } finally {
       await browser.close();
