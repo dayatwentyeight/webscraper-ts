@@ -212,7 +212,7 @@ describe('PlaywrightEngine', () => {
       expect(handlers[1].action).toHaveBeenCalledTimes(requests.length);
     });
 
-    it('should throw Erro when no handlers mathcing with the label of the queue item', async () => {
+    it('should throw Error when no handlers matching with the label of the queue item', async () => {
       const handlers = [
         { key: 'addRequest', action: jest.fn().mockResolvedValue({}), index: 0 },
         { key: 'nextRequest', action: jest.fn().mockResolvedValue({}), index: 1 }
