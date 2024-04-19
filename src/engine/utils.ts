@@ -34,6 +34,8 @@ class EngineUtils {
     const reservedMemory = totalMem * 0.20;        // 20% of total memory
     const usableMemory = freeMem - reservedMemory; // Actual usable memory after reserving 20%
 
+    if (usableMemory <= 0) throw new Error('Not enough memory to run engines');
+
     const memoryEstimateBytes = memoryEstimate * 1024 * 1024;
     const numInstances = Math.floor(usableMemory / memoryEstimateBytes);
 

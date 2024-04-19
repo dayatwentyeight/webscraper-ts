@@ -66,15 +66,6 @@ describe('EngineUtils', () => {
   });
 
   describe('setConcurrency()', () => {
-    it('should reserve 20% of total memory and calculate instances correctly', () => {
-      jest.spyOn(os, 'totalmem').mockReturnValue(10 * 1024 * 1024 * 1024); // 10GB
-      jest.spyOn(os, 'freemem').mockReturnValue(2 * 1024 * 1024 * 1024); // 2GB
-
-      // totalmem = 10 GB, freemem = 2 GB, 20% reserved = 2 GB, usable = 0 GB
-      // 128 MB per instance -> 0 instances
-      expect(utils.setConcurrency(5)).toBe(0);
-    });
-
     it('returns number of instances based on maxConcurrency if lower than calculated instances', () => {
       jest.spyOn(os, 'totalmem').mockReturnValue(10 * 1024 * 1024 * 1024); // 10GB
       jest.spyOn(os, 'freemem').mockReturnValue(8 * 1024 * 1024 * 1024); // 8GB
@@ -90,6 +81,14 @@ describe('EngineUtils', () => {
 
       expect(utils.setConcurrency(0)).toBe(48);
     });
+
+    it('should throw "Not enough memory to run engines" error if free memory is less than 20% of total memory', () => {
+      jest.spyOn(os, 'totalmem').mockReturnValue(10 * 1024 * 1024 * 1024); // 10GB
+      jest.spyOn(os, 'freemem').mockReturnValue(1 * 1024 * 1024 * 1024); // 1GB
+
+      // totalmem = 10 GB, freemem = 1 GB, 20% reserved = 2 GB, usable = -1 GB
+      expect(() => utils.setConcurrency(0)).toThrow("Not enough memory to run engines");
+    })
   });
 
 });
