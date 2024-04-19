@@ -9,7 +9,7 @@ export interface LaunchContext {
   lauchOptions: LaunchOptions,
 }
 
-export interface RequestHandlerOptions {
+export interface PlaywrightRequestHandlerOptions {
   page: Page,
   request?: RequestQueueItem,
   navigate: (url: string, options?: {
@@ -59,7 +59,7 @@ class PlaywrightEngine {
     const page = await context.newPage();
     try {
       // Navigate to url with retry option;
-      const navigate: RequestHandlerOptions["navigate"] =
+      const navigate: PlaywrightRequestHandlerOptions["navigate"] =
         async (url, options) =>
           await this.utils.retryNavigate(
             async () => await page.goto(url, options),
@@ -68,7 +68,7 @@ class PlaywrightEngine {
           );
 
       // Push item(s) to RequestQueue
-      const enqueue: RequestHandlerOptions["enqueue"] =
+      const enqueue: PlaywrightRequestHandlerOptions["enqueue"] =
         async (item) => await this.requestQueue.push(item);
 
       if (request) {

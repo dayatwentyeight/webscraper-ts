@@ -15,7 +15,7 @@ class App {
     }
 
     for (const rule of rules) {
-      // Load enigne with rule
+      // Load engine with rule
       const engine = await this.loader.load(rule);
       await engine.run();
     }
