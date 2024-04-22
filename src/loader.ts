@@ -15,7 +15,7 @@ import DbService from "./db/db.service";
 type PageParams = {
   type: "url" | "scroll",
   start?: number,
-  numberOfItems?: number,
+  scale?: number,
   maxPageNumber?: number
 }
 
@@ -50,8 +50,8 @@ export default class Loader {
 
   private getPageIndex(pageIdx: number, pagingParams: PageParams) {
     if (pagingParams.type !== "url") return 0;
-    const { start, numberOfItems } = pagingParams;
-    return numberOfItems * (pageIdx - 1) + start;
+    const { start, scale } = pagingParams;
+    return scale * (pageIdx - 1) + start;
   }
 
   private buildLinkUrl(linkPattern: string, urlParams: UrlParams, page?: number) {
@@ -110,7 +110,10 @@ export default class Loader {
         async ({ navigate, enqueue }: ApiRequestHandlerOptions) => {
           let pageNum = 1;
           while (pageNum < pageParams.maxPageNumber + 1) {
-            const url = this.buildLinkUrl(urlPattern, urlParams, pageNum++);
+            const pageIndex = this.getPageIndex(pageNum++, pageParams);
+            const url = this.buildLinkUrl(urlPattern, urlParams, pageIndex);
+            this.log.info(`Go to ${url}`);
+
             const res = await navigate(url);
             const contentType = res.headers['content-type'];
             const requests = [];
@@ -181,6 +184,8 @@ export default class Loader {
           while (pageNum < pageParams.maxPageNumber + 1) {
             const pageIndex = this.getPageIndex(pageNum++, pageParams);
             const url = this.buildLinkUrl(urlPattern, urlParams, pageIndex);
+
+            this.log.info(`Go to ${url}`);
             await navigate(url);
 
             const links = await page.$$eval(
