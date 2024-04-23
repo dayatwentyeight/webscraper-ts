@@ -8,7 +8,7 @@ import ApiEngine, { ApiRequestHandlerOptions } from "./engine/api-engine";
 import RequestQueue from "./engine/request-queue";
 import RequestRouter from "./engine/request-router";
 import Logger from "./lib/logger";
-import { parseAndFormatDate } from "./lib/date-parser";
+import { extractDatetimeString, parseAndFormatDate } from "./lib/date-parser";
 import DbService from "./db/db.service";
 
 
@@ -142,28 +142,38 @@ export default class Loader {
       await router.addHandler(
         'docRequest',
         async ({ request, navigate }: ApiRequestHandlerOptions) => {
-          this.log.info(`Navigates to ${request.url}`);
-          const res = await navigate(request.url, { responseType: "arraybuffer" });
-          const contentType = res.headers['content-type'];
-          await setTimeout(docSelectors.interval);
-          
-          const charset = /charset=(\S*)/.exec(contentType)[1];
-          if (contentType.includes('text/html')) {
-            const data = iconv.decode(res.data, charset).toString();
-            const $ = cheerio.load(data);
+          try {
+            this.log.info(`Navigates to ${request.url}`);
+            const res = await navigate(request.url, { responseType: "arraybuffer" });
+            const contentType = res.headers['content-type'];
+            await setTimeout(docSelectors.interval);
 
-            const title = $(docSelectors.titleSelector).text();
-            const body = $(docSelectors.bodySelector).text();
-            const dtText = $(docSelectors.datetimeSelector).text();
-            const datetime = new RegExp(docSelectors.datetimeRegex).exec(dtText)[1];
+            const charset = /charset=(\S*)/.exec(contentType)[1];
+            if (contentType.includes('text/html')) {
+              const data = iconv.decode(res.data, charset).toString();
+              const $ = cheerio.load(data);
 
-            this.log.info(`Save result to /result/${id}`)
-            await resultDb.insert(`/${id}`, [{
-              url: request.url,
-              title,
-              datetime,
-              body: this.textParser(body),
-            }])
+              const title = $(docSelectors.titleSelector).text();
+              const body = $(docSelectors.bodySelector).text();
+              const dtText = docSelectors.datetimeAttr
+                ? $(docSelectors.datetimeSelector).attr(docSelectors.datetimeAttr)
+                : $(docSelectors.datetimeSelector).text();
+              const datetime = extractDatetimeString(dtText);
+
+              this.log.info(`Save result to /result/${id}`)
+              await resultDb.insert(`/${id}`, [{
+                url: request.url,
+                title,
+                datetime,
+                body: this.textParser(body),
+              }])
+            }
+          } catch (e) {
+            if (e instanceof Error && e.message.includes('Cannot find datetime string')) {
+              this.log.error(e);
+            } else {
+              throw e;
+            }
           }
         }
       );
@@ -208,31 +218,42 @@ export default class Loader {
       await router.addHandler(
         'docRequest',
         async ({ request, page, navigate }: PlaywrightRequestHandlerOptions) => {
-          await page.route('**/*', (route) => {
-            if (route.request().resourceType() === 'image') {
-              // Abort requests for images
-              route.abort();
+          try {
+            await page.route('**/*', (route) => {
+              if (route.request().resourceType() === 'image') {
+                // Abort requests for images
+                route.abort();
+              } else {
+                // Continue all other requests
+                route.continue();
+              }
+            });
+
+            await navigate(request.url);
+            await page.waitForTimeout(docSelectors.interval);
+
+            const title = await page.$eval(docSelectors.titleSelector, (e) => e.textContent);
+            const body = await page.$eval(docSelectors.bodySelector, (e) => e.textContent);
+            const dtElem = await page.$(docSelectors.datetimeSelector);
+            const dtText = docSelectors.datetimeAttr
+              ? await dtElem.getAttribute(docSelectors.datetimeAttr)
+              : await dtElem.textContent()
+            const datetime = extractDatetimeString(dtText);
+
+            this.log.info(`Save result to /result/${id}`)
+            await resultDb.insert(`/${id}`, [{
+              url: request.url,
+              title,
+              datetime,
+              body: this.textParser(body),
+            }])
+          } catch (e) {
+            if (e instanceof Error && e.message.includes('Cannot find datetime string')) {
+              this.log.error(e);
             } else {
-              // Continue all other requests
-              route.continue();
+              throw e;
             }
-          });
-
-          await navigate(request.url);
-          await page.waitForTimeout(docSelectors.interval);
-
-          const title = await page.$eval(docSelectors.titleSelector, (e) => e.textContent);
-          const body = await page.$eval(docSelectors.bodySelector, (e) => e.textContent);
-          const dtElem = await page.$(docSelectors.datetimeSelector);
-          const datetime = await dtElem.getAttribute(docSelectors.datetimeAttr);
-
-          this.log.info(`Save result to /result/${id}`)
-          await resultDb.insert(`/${id}`, [{
-            url: request.url,
-            title,
-            datetime,
-            body: this.textParser(body),
-          }])
+          }
         }
       );
 
