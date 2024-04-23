@@ -29,7 +29,7 @@ export interface Rule {
   engineType: 'api' | 'playwright',
   urlPattern: string,
   urlParams: UrlParams,
-  pageParams: PageParams,
+  pageParams?: PageParams,
   linkSelectors: {
     linkSelector: string,
     linkAttr: string,
@@ -109,7 +109,8 @@ export default class Loader {
         'addRequest',
         async ({ navigate, enqueue }: ApiRequestHandlerOptions) => {
           let pageNum = 1;
-          while (pageNum < pageParams.maxPageNumber + 1) {
+          const maxPage = pageParams?.maxPageNumber || 1; 
+          while (pageNum < maxPage + 1) {
             const pageIndex = this.getPageIndex(pageNum++, pageParams);
             const url = this.buildLinkUrl(urlPattern, urlParams, pageIndex);
             this.log.info(`Go to ${url}`);
@@ -190,8 +191,8 @@ export default class Loader {
         'addRequest',
         async ({ page, navigate, enqueue }: PlaywrightRequestHandlerOptions) => {
           let pageNum = 1;
-
-          while (pageNum < pageParams.maxPageNumber + 1) {
+          const maxPage = pageParams?.maxPageNumber || 1; 
+          while (pageNum < maxPage + 1) {
             const pageIndex = this.getPageIndex(pageNum++, pageParams);
             const url = this.buildLinkUrl(urlPattern, urlParams, pageIndex);
 
