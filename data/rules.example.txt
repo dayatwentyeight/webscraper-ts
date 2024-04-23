@@ -1,0 +1,60 @@
+[
+  {
+    "id": "channel-1",
+    "engineType": "playwright",
+    "urlPattern": "",
+    "urlParams": {
+      "baseUrl": "",
+      "keyword": "",
+      "start": "",
+      "end": ""
+    },
+    "pageParams": {
+      "type": "url",
+      "start": 1,
+      "scale": 10,
+      "maxPageNumber": 100
+    },
+    "linkSelectors": {
+      "linkSelector": "",
+      "linkAttr": "",
+      "interval": 1000
+    },
+    "docSelectors": {
+      "titleSelector": "",
+      "datetimeSelector": "",
+      "datetimeAttr": "",
+      "bodySelector": "",
+      "interval": 1000
+    }
+  },
+  {
+    "id": "channel-2",
+    "engineType": "api",
+    "urlPattern": "",
+    "urlParams": {
+      "baseUrl": "",
+      "keyword": "",
+      "start": "",
+      "end": ""
+    },
+    "pageParams": {
+      "type": "url",
+      "start": 1,
+      "scale": 1,
+      "maxPageNumber": 100
+    },
+    "linkSelectors": {
+      "linkSelector": "",
+      "linkAttr": "",
+      "interval": 1000
+    },
+    "docSelectors": {
+      "titleSelector": "",
+      "datetimeSelector": "",
+      "datetimeAttr": "",
+      "bodySelector": "",
+      "interval": 1000
+    }
+  }
+]

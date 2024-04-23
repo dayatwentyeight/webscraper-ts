@@ -28,7 +28,7 @@ lerna-debug.log*
 .env
 
 # data files
-/data
+/data/*.json
 /test-results/
 /playwright-report/
 /blob-report/
